@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+<title>FUNK! DROP RUSH</title>
+<style>
+  :html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08051a;font-family:Impact,"Arial Black",sans-serif;touch-action:none}
+  body{color:#fff;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100vw;height:100vh}
+  #ui{position:fixed;inset:0;pointer-events:none}
+  #top{position:absolute;top:0;left:0;right:0;height:118px;background:linear-gradient(180deg,rgba(10,5,35,.9),rgba(10,5,35,.35),transparent);display:flex;align-items:flex-start;justify-content:space-between;padding:18px 28px;box-sizing:border-box}
+  .tag{font-family:Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:3px;color:#d8ccff}.value{font-size:34px;line-height:34px;text-shadow:4px 4px 0 #372078}
+  #score{text-align:left}#combo{text-align:right}
+  #combo b{color:#ffec3a;font-size:46px}
+  #banner{position:absolute;left:50%;top:18%;transform:translate(-50%,-50%) scale(.8);font-size:46px;text-align:center;opacity:0;text-shadow:5px 5px 0 #6021b8,0 0 25px #fff;transition:.12s}
+  #banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #bottom{position:absolute;bottom:0;left:0;right:0;height:145px;background:linear-gradient(0deg,rgba(10,5,35,.95),transparent)}
+  #laneHint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:10px}
+  .key{width:72px;height:72px;border:3px solid rgba(255,255,255,.35);border-radius:18px;display:grid;place-items:center;font-size:25px;background:rgba(15,10,50,.8);box-shadow:inset 0 0 20px rgba(255,255,255,.08),0 8px 20px rgba(0,0,0,.35)}
+  #start,#pauseOverlay{position:absolute;inset:0;pointer-events:auto;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#24106a 0,#09051f 72%)}
+  #start.hide,#pauseOverlay.hide{display:none}
+  .panel{text-align:center;max-width:680px;padding:28px}
+  .logo{font-size:clamp(56px,11vw,112px);line-height:.78;letter-spacing:-5px;text-transform:uppercase;text-shadow:6px 6px 0 #6c32ff,10px 10px 0 #ff36b2;transform:rotate(-3deg)}
+  .logo span{display:block;color:#ffe43b;font-size:.58em;text-shadow:4px 4px 0 #ef4b87}
+  .sub{margin:24px 0 18px;font:900 13px Arial,sans-serif;letter-spacing:6px;color:#bdb1e9}
+  button{pointer-events:auto;border:0;border-radius:14px;padding:18px 36px;background:#fce43a;color:#15102e;font:900 20px Arial,sans-serif;box-shadow:0 8px 0 #df8e22,0 14px 35px #0008;cursor:pointer}
+  button:active{transform:translateY(6px);box-shadow:0 2px 0 #df8e22}
+  #pauseOverlay{background:rgba(7,4,26,.78);backdrop-filter:blur(8px)}
+  #pause{position:absolute;right:22px;top:16px;width:44px;height:44px;border:2px solid rgba(255,255,255,.25);border-radius:50%;display:grid;place-items:center;pointer-events:auto;background:rgba(10,5,35,.75);font:900 15px Arial,sans-serif;cursor:pointer}
+  #life{position:absolute;left:28px;bottom:18px;width:190px;height:11px;border:2px solid rgba(255,255,255,.25);border-radius:8px;overflow:hidden;background:#211545}
+  #lifeFill{height:100%;width:100%;background:linear-gradient(90deg,#fa4dad,#ffe34a);box-shadow:0 0 12px #f7d44a}
+  @media(max-width:700px){#top{padding:12px 14px;height:90px}.value{font-size:24px}.value#comboText{font-size:28px}#combo b{font-size:32px}.key{width:54px;height:54px;border-radius:14px;font-size:18px}#laneHint{gap:6px}#life{left:14px;width:130px}#pause{right:12px}.logo{letter-spacing:-3px}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <div id="top"><div id="score"><div class="tag">PONTOS</div><div class="value" id="scoreText">000000</div></div><div id="combo"><div class="tag">COMBO</div><b id="comboText">0</b></div></div>
+  <div id="banner">PERFEITO!</div><div id="pause">II</div>
+  <div id="bottom"><div id="life"><div id="lifeFill"></div></div><div id="laneHint"><div class="key" data-lane="0">D</div><div class="key" data-lane="1">F</div><div class="key" data-lane="2">J</div><div class="key" data-lane="3">K</div></div></div>
+  <div id="start"><div class="panel"><div class="logo">FUNK!<span>DROP RUSH</span></div><div class="sub">4 FAIXAS • RITMO • SURVIVE</div><button id="play">ENTRAR NO DROP</button></div></div>
+  <div id="pauseOverlay" class="hide"><div class="panel"><div class="logo" style="font-size:72px">PAUSA</div><br><button id="resume">CONTINUAR</button></div></div>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H,DPR,scale;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+const colors=['#36d9ff','#7d63ff','#ff52bc','#ffe83d'];
+let state='menu',notes=[],particles=[],stars=[],score=0,combo=0,maxCombo=0,life=100,nextBeat=0,beat=0,last=0,flash=0,music;
+for(let i=0;i<90;i++)stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.8+.3,a:Math.random()*.8+.2,s:Math.random()*4+1});
+const start=document.getElementById('start'),pauseOverlay=document.getElementById('pauseOverlay');
+const scoreText=document.getElementById('scoreText'),comboText=document.getElementById('comboText'),lifeFill=document.getElementById('lifeFill'),banner=document.getElementById('banner');
+function laneX(i){let roadW=Math.min(W*.72,620), gap=roadW/4;return W/2-roadW/2+gap*(i+.5)}
+function roadTop(){return H*.19}function hitY(){return H-190}
+function spawn(){let lane=Math.floor(Math.random()*4);let pattern=Math.random();if(pattern>.82){lane=(lane+1)%4}notes.push({lane,y:-40,x:laneX(lane),speed:420+beat*.9,hit:false,age:0});beat++;}
+function acHit(){let o=music.createOscillator(),g=music.createGain();o.type='square';o.frequency.value=120+combo*3;g.gain.setValueAtTime(.09,music.currentTime);g.gain.exponentialRampToValueAtTime(.001,music.currentTime+.09);o.connect(g).connect(music.destination);o.start();o.stop(music.currentTime+.1)}
+function startMusic(){if(music)return;music=new (window.AudioContext||window.webkitAudioContext);scheduleMusic()}
+function scheduleMusic(){if(!music)return;if(state==='play'){let t=music.currentTime;[55,55,82.41,73.42][beat%4];let bass=[55,55,82.41,73.42][beat%4];let o=music.createOscillator(),g=music.createGain();o.type='sawtooth';o.frequency.setValueAtTime(bass,t);o.frequency.exponentialRampToValueAtTime(bass*.5,t+.16);g.gain.setValueAtTime(.055,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g).connect(music.destination);o.start(t);o.stop(t+.19);if(beat%2===0){let noise=music.createOscillator(),ng=music.createGain();noise.type='triangle';noise.frequency.value=beat%4===0?180:110;ng.gain.setValueAtTime(.035,t);ng.gain.exponentialRampToValueAtTime(.001,t+.08);noise.connect(ng).connect(music.destination);noise.start(t);noise.stop(t+.09)}}setTimeout(scheduleMusic,250)}
+function begin(){startMusic();start.classList.add('hide');pauseOverlay.classList.add('hide');state='play';score=0;combo=0;life=100;beat=0;notes=[];nextBeat=.6;last=performance.now();acHit()}
+document.getElementById('play').onclick=begin;document.getElementById('resume').onclick=()=>{pauseOverlay.classList.add('hide');state='play';last=performance.now()};document.getElementById('pause').onclick=()=>{if(state==='play'){state='pause';pauseOverlay.classList.remove('hide')}};
+function judgement(ok,lane,perfect=false){if(ok){combo++;maxCombo=Math.max(maxCombo,combo);score+=perfect?100:70+combo*2;life=Math.min(100,life+2.5);show(perfect?'PERFEITO!':'BOA!',perfect?'#ffe43b':'#4cecff');acHit();burst(laneX(lane),hitY(),colors[lane])}else{combo=0;life-=12;show('ERROU','#ff4c88')}}
+let bannerTimer;function show(txt,col){banner.textContent=txt;banner.style.color=col;banner.classList.add('show');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>banner.classList.remove('show'),260)}
+function burst(x,y,col){for(let i=0;i<12;i++){let a=Math.random()*Math.PI*2,s=80+Math.random()*180;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,col})}}
+function press(lane){if(state!=='play')return;let best=null,bd=1e9;for(const n of notes){if(n.lane===lane&&!n.hit){let d=Math.abs(n.y-hitY());if(d<bd){bd=d;best=n}}}if(best&&bd<75){best.hit=true;notes=notes.filter(n=>n!==best);judgement(true,lane,bd<35)}else judgement(false,lane)}
+addEventListener('keydown',e=>{let k={d:0,f:1,j:2,k:3}[e.key.toLowerCase()];if(k!==undefined){e.preventDefault();press(k)}if(e.key==='Escape'||e.key===' ')if(state==='play'){state='pause';pauseOverlay.classList.remove('hide')}else if(state==='pause'){state='play';last=performance.now();pauseOverlay.classList.add('hide')}});
+addEventListener('pointerdown',e=>{if(state==='menu'||e.target.closest&&e.target.closest('button'))return;let roadW=Math.min(W*.72,620),x=e.clientX;for(let i=0;i<4;i++)if(Math.abs(x-laneX(i))<roadW/8){press(i);break}});
+function update(dt){if(state==='play'){nextBeat-=dt;if(nextBeat<=0){spawn();nextBeat=Math.max(.28,.62-beat*.002)}for(const n of notes)n.y+=n.speed*dt;for(let i=notes.length-1;i>=0;i--)if(!notes[i].hit&&notes[i].y>hitY()+95){notes.splice(i,1);judgement(false,0)}for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.life-=dt*1.8}particles=particles.filter(p=>p.life>0);flash=Math.max(0,flash-dt*3);lifeFill.style.width=life+'%';scoreText.textContent=String(score).padStart(6,'0');comboText.textContent=combo;if(life<=0){state='over';show('DROP QUASE!','#ff4d88')}}}
+function draw(){ctx.clearRect(0,0,W,H);let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0827');g.addColorStop(.55,'#18104a');g.addColorStop(1,'#322064');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  for(const s of stars){let y=(s.y*H+(performance.now*.01*s.s))%H;ctx.globalAlpha=s.a;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x*W,y,s.r,0,7);ctx.fill()}ctx.globalAlpha=1;
+  ctx.save();ctx.translate(W/2,H*.31);let sun=ctx.createRadialGradient(0,0,10,0,0,Math.min(W,H)*.16);sun.addColorStop(0,'#ffe34d');sun.addColorStop(.55,'#ff65b6');sun.addColorStop(1,'rgba(255,65,166,0)');ctx.fillStyle=sun;ctx.beginPath();ctx.arc(0,0,Math.min(W,H)*.16,0,7);ctx.fill();ctx.restore();
+  let roadW=Math.min(W*.72,620),left=W/2-roadW/2;ctx.beginPath();ctx.moveTo(W/2-roadW*.16,roadTop());ctx.lineTo(W/2+roadW*.16,roadTop());ctx.lineTo(left+roadW,H);ctx.lineTo(left,H);ctx.closePath();let rg=ctx.createLinearGradient(left,0,left+roadW,0);rg.addColorStop(0,'#21165a');rg.addColorStop(.5,'#2e1a69');rg.addColorStop(1,'#21165a');ctx.fillStyle=rg;ctx.fill();ctx.strokeStyle='rgba(124,99,255,.45)';ctx.lineWidth=2;
+  for(let i=0;i<=4;i++){let bx=left+roadW*i/4;ctx.beginPath();ctx.moveTo(W/2-roadW*.16+roadW*.32*i/4,roadTop());ctx.lineTo(bx,H);ctx.stroke()} 
+  ctx.globalAlpha=.12;ctx.fillStyle='#caaaff';for(let y=roadTop();y<H;y+=60){ctx.fillRect(left,(y+(beat*20)%60)-60,roadW,2)}ctx.globalAlpha=1;
+  for(let i=0;i<4;i++){let x=laneX(i);ctx.fillStyle=colors[i];ctx.globalAlpha=.13;ctx.beginPath();ctx.ellipse(x,hitY(),60,18,0,0,7);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=colors[i];ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(x,hitY(),55,16,0,0,7);ctx.stroke();ctx.fillStyle='#fff';ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(x,hitY(),5,0,7);ctx.fill();ctx.globalAlpha=1}
+  for(const n of notes){if(n.hit)continue;ctx.save();ctx.translate(n.x,n.y);ctx.shadowColor=colors[n.lane];ctx.shadowBlur=18;ctx.rotate(Math.sin(n.age)*.03);ctx.fillStyle=colors[n.lane];roundRect(-28,-28,56,56,12);ctx.fill();ctx.strokeStyle='#fff';ctx.globalAlpha=.8;ctx.lineWidth=3;roundRect(-28,-28,56,56,12);ctx.stroke();ctx.globalAlpha=.35;ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(-20,-20);ctx.lineTo(20,-20);ctx.lineTo(10,-4);ctx.lineTo(-20,-4);ctx.fill();ctx.restore();n.age+=.016}
+  for(const p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.col;ctx.fillRect(p.x,p.y,5,5)}ctx.globalAlpha=1;
+}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function loop(t){let dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+</script>
+</body>
+</html>
