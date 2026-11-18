@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>IAN — Mundo de Palavras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--cream:#f3f0e7;--ink:#151813;--lime:#d9ff43;--orange:#ff7448}
+    *{box-sizing:border-box} html,body,#app{width:100%;height:100%;margin:0;overflow:hidden} body{font-family:Manrope,sans-serif;background:#98a99d;color:var(--ink)}
+    canvas{display:block}
+    .topbar{position:fixed;z-index:5;top:18px;left:22px;right:22px;height:58px;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+    .brand{display:flex;align-items:center;gap:10px;color:white;text-shadow:0 2px 12px #0004}.brand-mark{width:42px;height:42px;border:2px solid rgba(255,255,255,.8);border-radius:50%;display:grid;place-items:center;font-family:DM Mono;font-size:16px;background:#1d281fe0;backdrop-filter:blur(8px)}
+    .brand-name{font-size:11px;letter-spacing:.18em;font-weight:800}.brand-sub{font:9px DM Mono;margin-top:3px;opacity:.75}
+    .status{pointer-events:auto;border:0;border-radius:999px;padding:10px 15px;background:rgba(20,25,20,.78);color:white;font:10px DM Mono;letter-spacing:.08em;backdrop-filter:blur(10px);display:flex;gap:8px;align-items:center}.status i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime)}
+    .prompt-wrap{position:fixed;z-index:8;bottom:26px;left:50%;transform:translateX(-50%);width:min(680px,calc(100% - 32px));filter:drop-shadow(0 12px 24px #1c271d55)}
+    .prompt{height:68px;display:flex;align-items:center;background:rgba(247,245,236,.94);border:1px solid rgba(255,255,255,.9);border-radius:18px;padding:7px 7px 7px 20px;backdrop-filter:blur(14px)}
+    .prompt label{font:11px DM Mono;color:#73806f;margin-right:12px;white-space:nowrap}.prompt input{min-width:0;flex:1;border:0;outline:0;background:transparent;font:700 16px Manrope;color:var(--ink)}.prompt input::placeholder{color:#9da398}
+    .go{width:54px;height:54px;border:0;border-radius:13px;background:var(--lime);color:#1b2017;font-size:23px;cursor:pointer;transition:.18s}.go:hover{transform:rotate(-4deg) scale(1.04)}
+    .suggestions{display:flex;justify-content:center;gap:7px;margin-bottom:9px}.suggestions button{border:1px solid rgba(255,255,255,.55);background:rgba(20,28,20,.72);color:white;border-radius:999px;padding:7px 11px;font:10px DM Mono;cursor:pointer;backdrop-filter:blur(8px)}.suggestions button:hover{background:var(--lime);color:#1a1e16}
+    .toast{position:fixed;z-index:7;left:50%;top:92px;transform:translate(-50%,-10px);background:#171c17;color:white;border-radius:12px;padding:11px 16px;font:11px DM Mono;opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translate(-50%,0)}
+    .hint{position:fixed;z-index:4;left:22px;bottom:104px;color:white;text-shadow:0 2px 8px #0008;font:9px DM Mono;letter-spacing:.04em}.hint b{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid #fff;border-radius:50%;margin-right:6px}
+    .crosshair{position:fixed;z-index:3;left:50%;top:50%;width:5px;height:5px;border:1px solid white;border-radius:50%;box-shadow:0 1px 4px #0005;pointer-events:none}
+    .mobile-controls{display:none;position:fixed;z-index:6;left:18px;bottom:108px;width:112px;height:112px}.pad{position:absolute;width:112px;height:112px;border:1px solid #ffffff55;border-radius:50%;background:#1b241b22}.stick{position:absolute;left:36px;top:36px;width:40px;height:40px;border-radius:50%;background:#f5f2e8c9}.jump{display:none;position:fixed;z-index:6;right:24px;bottom:112px;width:56px;height:56px;border-radius:50%;border:1px solid white;background:#d9ff43cc;color:#1b2017;font-size:20px}
+    @media(max-width:700px){.topbar{top:12px;left:12px;right:12px}.brand-mark{width:36px;height:36px}.status{padding:9px 11px}.prompt-wrap{bottom:14px}.prompt{height:58px;padding-left:14px}.go{width:44px;height:44px}.prompt label{display:none}.suggestions{display:none}.hint{display:none}.mobile-controls{display:block}.jump{display:block}}
+  </style>
+  <script type="module" crossorigin src="/assets/index-Cxqsbr-L.js"></script>
+</head>
+<body>
+  <div id="app"></div><div class="crosshair"></div>
+  <div class="topbar"><div class="brand"><div class="brand-mark">IA</div><div><div class="brand-name">IAN WORLD</div><div class="brand-sub">SANDBOX ABERTA</div></div></div><button class="status" id="randomBtn"><i></i><span>ALEATORIZAR</span></button></div>
+  <div class="toast" id="toast">O mundo mudou</div><div class="hint"><b>W</b><b>A</b><b>S</b><b>D</b> mover &nbsp; • &nbsp; mouse olhar</div>
+  <div class="mobile-controls" id="mobilePad"><div class="pad"></div><div class="stick" id="stick"></div></div><button class="jump" id="jump">↑</button>
+  <div class="prompt-wrap"><div class="suggestions"><button data-prompt="nuvens de chuva">☔ chuva</button><button data-prompt="floresta mágica">🌿 floresta</button><button data-prompt="chuva de fogo">🔥 fogo</button><button data-prompt="lua gigante">🌙 lua</button></div><form class="prompt" id="promptForm"><label>CRIAR /</label><input id="promptInput" autocomplete="off" placeholder="Escreva o que quiser..." maxlength="70"><button class="go" aria-label="Criar">↗</button></form></div>
+</body>
+</html>
