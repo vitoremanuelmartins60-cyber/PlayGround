@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Funk Rush 2D</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <section id="menu" class="screen active">
+      <header class="topbar">
+        <div class="brand"><span class="bolt">ϟ</span><div><b>FUNK</b><strong>RUSH</strong></div></div>
+        <button id="soundBtn" class="icon-btn" aria-label="Som">♪</button>
+      </header>
+
+      <div class="menu-grid">
+        <aside class="panel mode-panel">
+          <p class="eyebrow">ESCOLHA O MODO</p>
+          <button class="mode-card selected" data-mode="solo"><span class="mode-icon">★</span><span><b>SOLO</b><small>Jogue sozinho</small></span><i>›</i></button>
+          <button class="mode-card" data-mode="duo"><span class="mode-icon">♟</span><span><b>AMIGO</b><small>2 jogadores</small></span><i>›</i></button>
+          <div class="difficulty">
+            <p>DIFICULDADE</p>
+            <div class="segmented">
+              <button data-difficulty="easy" class="selected">FÁCIL</button>
+              <button data-difficulty="hard">DIFÍCIL</button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="hero-card">
+          <div class="hero-copy">
+            <p class="eyebrow">TEMPORADA 2D</p>
+            <h1>RITMO<br/><em>EXPLOSIVO</em></h1>
+            <p>Acertar no tempo é tudo.<br/>Sinta o beat e domine a pista.</p>
+          </div>
+          <div class="stage-art">
+            <div class="sun"></div>
+            <div class="buildings"></div>
+            <div class="character hero-character"><div class="hair"></div><div class="face"></div><div class="body"></div><div class="legs"></div></div>
+            <div class="character hero-character alt"><div class="hair"></div><div class="face"></div><div class="body"></div><div class="legs"></div></div>
+            <div class="speakers"><span></span><span></span></div>
+          </div>
+        </section>
+
+        <aside class="panel roster-panel">
+          <div class="panel-title"><p class="eyebrow">PERSONAGENS</p><span id="charCount">1 / 200</span></div>
+          <div class="avatar-preview" id="avatarPreview"><div class="mini-character"><div class="hair"></div><div class="face"></div><div class="body"></div></div></div>
+          <h2 id="charName">DJ RELÂMPAGO</h2>
+          <div class="char-nav"><button id="prevChar">‹</button><div id="charDots"></div><button id="nextChar">›</button></div>
+        </aside>
+      </div>
+
+      <div class="music-strip">
+        <div class="album"><span>♪</span></div>
+        <div class="track-info"><small>MÚSICA ESCOLHIDA</small><b id="trackName">Beat da Favela 01</b></div>
+        <button id="prevTrack" class="track-arrow">‹</button>
+        <div class="track-progress"><span></span></div>
+        <button id="nextTrack" class="track-arrow">›</button>
+        <button id="playBtn" class="play-btn">JOGAR <span>▶</span></button>
+      </div>
+    </section>
+
+    <section id="game" class="screen">
+      <header class="game-hud">
+        <button id="backBtn" class="icon-btn">‹</button>
+        <div class="score-box"><small>PONTOS</small><b id="score">000000</b></div>
+        <div class="combo-box"><small>COMBO</small><b id="combo">×1</b></div>
+        <div class="lives" id="lives">♥ ♥ ♥</div>
+        <button id="pauseBtn" class="icon-btn">Ⅱ</button>
+      </header>
+      <div class="game-stage" id="gameStage">
+        <div class="lane-labels"><span>A</span><span>S</span><span>D</span><span>F</span></div>
+        <div class="lanes" id="lanes">
+          <div class="lane" data-lane="0"></div><div class="lane" data-lane="1"></div><div class="lane" data-lane="2"></div><div class="lane" data-lane="3"></div>
+        </div>
+        <div class="target-row"><button data-key="a" data-lane="0">A</button><button data-key="s" data-lane="1">S</button><button data-key="d" data-lane="2">D</button><button data-key="f" data-lane="3">F</button></div>
+        <div class="game-character" id="gameCharacter"><div class="hair"></div><div class="face"></div><div class="body"></div><div class="legs"></div></div>
+      </div>
+      <div id="judgement" class="judgement">PERFEITO!</div>
+      <div id="pauseOverlay" class="overlay"><div class="dialog"><h2>PAUSADO</h2><button id="resumeBtn" class="play-btn">CONTINUAR</button><button id="exitBtn" class="outline-btn">SAIR</button></div></div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
