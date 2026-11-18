@@ -74,11 +74,12 @@
         <div class="lanes" id="lanes">
           <div class="lane" data-lane="0"></div><div class="lane" data-lane="1"></div><div class="lane" data-lane="2"></div><div class="lane" data-lane="3"></div>
         </div>
-        <div class="target-row"><button data-key="a" data-lane="0">A</button><button data-key="s" data-lane="1">S</button><button data-key="d" data-lane="2">D</button><button data-key="f" data-lane="3">F</button></div>
+        <div class="target-row"><button data-key="a" data-lane="0"><small>P1</small>A</button><button data-key="s" data-lane="1"><small>P1</small>S</button><button data-key="d" data-lane="2"><small>P1</small>D</button><button data-key="f" data-lane="3"><small>P1</small>F</button></div>
         <div class="game-character" id="gameCharacter"><div class="hair"></div><div class="face"></div><div class="body"></div><div class="legs"></div></div>
       </div>
       <div id="judgement" class="judgement">PERFEITO!</div>
       <div id="pauseOverlay" class="overlay"><div class="dialog"><h2>PAUSADO</h2><button id="resumeBtn" class="play-btn">CONTINUAR</button><button id="exitBtn" class="outline-btn">SAIR</button></div></div>
+      <div id="resultOverlay" class="overlay"><div class="dialog"><p class="eyebrow">PARTIDA FINALIZADA</p><h2 id="resultTitle">RITMO NO TALENTO!</h2><div class="result-score"><small>PONTUAÇÃO</small><b id="resultScore">0</b></div><button id="restartBtn" class="play-btn">JOGAR NOVAMENTE</button><button id="resultExitBtn" class="outline-btn">MENU</button></div></div>
     </section>
   </main>
   <script src="game.js"></script>
