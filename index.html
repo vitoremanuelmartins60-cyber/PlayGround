@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>ASHEN THRONE — Boss Rush</title>
+  <style>
+    :*{box-sizing:border-box} html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#08090a;color:#ddd;font-family:Georgia,'Times New Roman',serif;touch-action:none;user-select:none} canvas{display:block;width:100%;height:100%}
+    #ui{position:fixed;inset:0;pointer-events:none}.bossbar{position:absolute;top:34px;left:50%;transform:translateX(-50%);width:min(620px,58vw);text-align:center}.bossname{font-size:13px;letter-spacing:6px;color:#c9bca5;margin-bottom:7px;text-shadow:0 2px 5px #000}.barframe{height:18px;border:1px solid #777;border-bottom-color:#292929;background:rgba(10,10,10,.65);box-shadow:0 2px 10px #000,inset 0 0 0 2px #111}.barfill{height:100%;width:100%;background:linear-gradient(90deg,#7a1d17,#b34a34 60%,#8d2c22);box-shadow:inset 0 1px #d98a70;transition:width .15s}
+    #playerhud{position:absolute;left:38px;bottom:38px;width:245px}.hpname{font-size:11px;letter-spacing:3px;margin-bottom:5px;color:#bfb8ab}.hpframe{height:13px;width:220px;border:1px solid #555;background:#111;box-shadow:0 2px 8px #000}.hpfill{height:100%;width:100%;background:linear-gradient(90deg,#4b6940,#80a36a);transition:width .12s}.stamina{height:7px;width:220px;border:1px solid #333;background:#0b0b0b;margin-top:6px}.staminafill{height:100%;width:100%;background:linear-gradient(90deg,#8d7b42,#d1bd73);transition:width .08s}
+    #hint{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);font:10px/1.5 Georgia;color:#9c9689;letter-spacing:2px;text-align:center;text-shadow:0 2px 4px #000}
+    #title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(20,20,18,.2),rgba(5,6,7,.78));transition:opacity .6s}.sigil{font-size:64px;color:#8d3b30;text-shadow:0 0 30px #42140f;margin-bottom:5px}h1{font-size:48px;letter-spacing:13px;margin:10px 0 3px;font-weight:normal;text-shadow:0 4px 12px #000}h2{font-size:12px;letter-spacing:8px;color:#9f9584;margin:8px 0 42px;font-weight:normal}.enter{pointer-events:auto;font:13px Georgia;letter-spacing:5px;color:#d0c7b5;border:1px solid #777;padding:16px 28px;background:rgba(12,12,12,.72);cursor:pointer}.enter:hover{border-color:#b29b78;background:rgba(40,35,28,.8)}
+    #damage{position:absolute;inset:0;background:radial-gradient(circle,transparent 45%,rgba(170,20,10,.65));opacity:0;transition:opacity .08s}
+    #controls{position:absolute;right:25px;bottom:28px;text-align:right;font:10px/1.8 Georgia;letter-spacing:2px;color:#777}.key{display:inline-block;min-width:22px;border:1px solid #555;border-bottom-width:2px;text-align:center;color:#aaa;margin-left:4px}
+    #touch{display:none;position:absolute;inset:0}.stick{position:absolute;width:120px;height:120px;border:1px solid rgba(200,190,165,.16);border-radius:50%;left:24px;bottom:50px}.stick::after{content:"";position:absolute;width:48px;height:48px;border-radius:50%;left:36px;top:36px;background:rgba(190,180,155,.18);border:1px solid rgba(220,210,190,.2)}.act{position:absolute;right:25px;bottom:44px;width:72px;height:72px;border-radius:50%;border:1px solid rgba(210,200,175,.25);background:rgba(20,20,18,.22);color:#bbb;font:13px Georgia;text-align:center;line-height:72px}.rolltouch{right:112px;bottom:28px;width:58px;height:58px;line-height:58px}
+    @media(max-width:800px),(pointer:coarse){#controls{display:none}#hint{bottom:18px}#playerhud{left:18px;bottom:18px;width:170px}.hpframe,.stamina{width:150px}.bossbar{top:18px;width:76vw}.bossname{font-size:10px}.touchyes #touch{display:block}h1{font-size:34px;letter-spacing:7px}.sigil{font-size:48px}}
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="ui">
+    <div class="bossbar"><div class="bossname">THE HOLLOW KING</div><div class="barframe"><div id="bosshp" class="barfill"></div></div></div>
+    <div id="playerhud"><div class="hpname">UNYIELDING</div><div class="hpframe"><div id="hp" class="hpfill"></div></div><div class="stamina"><div id="stamina" class="staminafill"></div></div></div>
+    <div id="hint"></div>
+    <div id="damage"></div>
+    <div id="controls">W A S D <span class="key">MOVE</span><br>CLICK / J <span class="key">ATTACK</span><br>SHIFT / K <span class="key">ROLL</span></div>
+    <div id="title"><div class="sigil">☩</div><h1>ASHEN THRONE</h1><h2>A BOSS RUSH</h2><button class="enter" id="enter">ENTER THE ARENA</button></div>
+    <div id="touch"><div class="stick" id="stick"></div><div class="act" id="attack">⚔</div><div class="act rolltouch" id="roll">↻</div></div>
+  </div>
+<script>
+(()=>{'use strict';
+const c=document.getElementById('game'),ctx=c.getContext('2d');let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*DPR;c.height=H*DPR;c.style.width=W+'px';c.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' '||e.key==='j'||e.key==='J')attack();if(e.key==='Shift'||e.key==='k'||e.key==='K')roll()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let started=false,mouseDown=false;c.addEventListener('pointerdown',e=>{if(started&&e.pointerType==='mouse')attack()});
+const p={x:0,y:55,z:0,hp:100,stamina:100,angle:0,attack:0,inv:0,roll:0,hurt:0};
+const boss={x:0,y:0,z:-9,hp:250,max:250,attack:0,phase:0,hurt:0,stagger:0,dir:0};
+let cameraShake=0,particles=[],messages=[],dead=false,victory=false,phaseTime=0;
+function dist(a,b){return Math.hypot(a.x-b.x,a.z-b.z)}
+function attack(){if(!started||dead||victory||p.attack>0||p.roll>0||p.stamina<18)return;p.attack=.38;p.stamina-=18;cameraShake=Math.max(cameraShake,2);for(let i=0;i<7;i++)particles.push({x:p.x+(Math.random()-.5)*2,y:1,z:p.z+(Math.random()-.5)*2,vx:(Math.random()-.5)*.08,vy:.04+Math.random()*.08,vz:(Math.random()-.5)*.08,life:.35,max:.35,color:'#bca879'})}
+function roll(){if(!started||dead||victory||p.roll>0||p.stamina<25)return;p.roll=.55;p.inv=.55;p.stamina-=25;let a=p.angle;p.vx=Math.sin(a)*.18;p.vz=Math.cos(a)*.18}
+function update(dt){
+ if(!started)return;
+ dt=Math.min(dt,.033);p.stamina=Math.min(100,p.stamina+18*dt);if(p.attack>0)p.attack-=dt;if(p.roll>0)p.roll-=dt;if(p.inv>0)p.inv-=dt;if(p.hurt>0)p.hurt-=dt;
+ let mx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),mz=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+ if(touchMove.active){mx=touchMove.x;mz=-touchMove.y}
+ if(mx||mz&&!p.roll){let len=Math.hypot(mx,mz)||1;mx/=len;mz/=len;p.angle=Math.atan2(mx,mz);let speed=p.roll>0?12:5.2;if(p.roll<=0){p.x+=mx*speed*dt;p.z+=mz*speed*dt}else{p.x+=p.vx*dt*60;p.z+=p.vz*dt*60}}
+ p.x=Math.max(-15,Math.min(15,p.x));p.z=Math.max(-13,Math.min(13,p.z));
+ let d=dist(p,boss);boss.dir=Math.atan2(p.x-boss.x,p.z-boss.z);phaseTime+=dt;if(boss.attack>0)boss.attack-=dt;if(boss.hurt>0)boss.hurt-=dt;if(boss.stagger>0)boss.stagger-=dt;
+ if(boss.hp>0){let threshold=boss.hp/boss.max;if(threshold<.55)boss.phase=1;
+  if(!boss.attack){if(d>3.4){let sp=boss.phase?3.6:2.7;boss.x+=(p.x-boss.x)/d*sp*dt;boss.z+=(p.z-boss.z)/d*sp*dt}else if(Math.random()<dt*.75){boss.attack=1.15}}
+  if(boss.attack>0&&boss.attack<.85&&boss.attack>.62&&d<3.8&&!p.inv&&p.hurt<=0){damagePlayer(10+boss.phase*4)}
+ }
+ if(p.attack>.22&&p.attack<.34){let ad=Math.abs(((boss.dir-p.angle+Math.PI*3)%(Math.PI*2))-Math.PI);if(d<4&&ad<1.15&&!boss.hurt){boss.hp-=boss.phase?12:9;boss.hurt=.15;boss.stagger=.18;cameraShake=5;for(let i=0;i<9;i++)particles.push({x:boss.x+(Math.random()-.5)*2,y:1.5,z:boss.z+(Math.random()-.5)*2,vx:(Math.random()-.5)*.15,vy:.03+Math.random()*.14,vz:(Math.random()-.5)*.15,life:.45,max:.45,color:'#d4af70'})}}
+ if(boss.hp<=0&&!victory){victory=true;messages.push({text:'THE HOLLOW KING FELLS',life:4,y:H*.42})}
+ if(p.hp<=0&&!dead){dead=true;messages.push({text:'YOU DIED',life:99,y:H*.42})}
+ document.getElementById('hp').style.width=Math.max(0,p.hp)+'%';document.getElementById('stamina').style.width=p.stamina+'%';document.getElementById('bosshp').style.width=Math.max(0,boss.hp/boss.max*100)+'%';
+ for(let i=particles.length-1;i>=0;i--){let q=particles[i];q.life-=dt;q.x+=q.vx;q.y+=q.vy;q.z+=q.vz;q.vy-=.006;if(q.life<=0)particles.splice(i,1)}
+ for(let i=messages.length-1;i>=0;i--){messages[i].life-=dt;if(messages[i].life<=0&&messages[i].life>-99)messages.splice(i,1)}
+ if(cameraShake>0)cameraShake*=.82
+}
+function damagePlayer(n){p.hp-=n;p.hurt=.5;p.inv=.25;cameraShake=10;document.getElementById('damage').style.opacity=.7;setTimeout(()=>document.getElementById('damage').style.opacity=0,90)}
+// pseudo-3D projection
+function project(x,y,z,cx,cy,cz,ang){let dx=x-cx,dz=z-cz;let ca=Math.cos(-ang),sa=Math.sin(-ang);let rx=dx*ca-dz*sa;let rz=dx*sa+dz*ca;let f=520/(rz+14);return{x:W/2+rx*f,y:H*.58-(y-cy)*f,fz:f}}
+let cam={x:0,z:12,y:7};
+function poly(points,fill,stroke){ctx.beginPath();points.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}}
+function ground(){
+ ctx.fillStyle='#090a0a';ctx.fillRect(0,0,W,H);let horizon=H*.55;let glow=ctx.createRadialGradient(W*.5,horizon,20,W*.5,horizon,W*.42);glow.addColorStop(0,'rgba(75,70,57,.25)');glow.addColorStop(.5,'rgba(22,26,25,.12)');glow.addColorStop(1,'rgba(5,7,8,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+ // arena floor grid
+ ctx.strokeStyle='rgba(125,125,108,.12)';ctx.lineWidth=1;for(let i=-16;i<=16;i+=2){let a=project(i,0,-14,cam.x,cam.y,cam.z,p.angle*.12),b=project(i,0,14,cam.x,cam.y,cam.z,p.angle*.12);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}for(let z=-14;z<=14;z+=2){let a=project(-16,0,z,cam.x,cam.y,cam.z,p.angle*.12),b=project(16,0,z,cam.x,cam.y,cam.z,p.angle*.12);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}
+ // distant pillars
+ for(let i=-5;i<=5;i+=2){let x=i*3.5,z=-13;let foot=project(x,0,z,cam.x,cam.y,cam.z,p.angle*.12),top=project(x,9,z,cam.x,cam.y,cam.z,p.angle*.12);ctx.fillStyle='#17191a';ctx.fillRect(top.x-8,top.y,16,foot.y-top.y);ctx.fillStyle='#262728';ctx.fillRect(top.x-12,top.y-5,24,7)}
+}
+function drawCharacter(o,enemy){let ang=enemy?boss.dir:p.angle;let px=project(o.x,o.y||0,o.z,cam.x,cam.y,cam.z,p.angle*.12);
+ ctx.save();ctx.translate(px.x,px.y);let s=Math.max(.55,px.fz/50);ctx.scale(s,s);ctx.translate(0,0);
+ if(enemy){ctx.fillStyle=boss.hurt?'#d3bd9e':'#303234';ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=12;ctx.beginPath();ctx.ellipse(0,-4,18,25,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#353638';ctx.fillRect(-16,-75,32,55);ctx.beginPath();ctx.moveTo(-15,-72);ctx.lineTo(-25,-95);ctx.lineTo(-5,-66);ctx.fill();ctx.beginPath();ctx.moveTo(15,-72);ctx.lineTo(25,-95);ctx.lineTo(5,-66);ctx.fill();ctx.fillStyle='#111214';ctx.beginPath();ctx.ellipse(0,-82,15,22,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8b3a2d';ctx.fillRect(-8,-85,5,3);ctx.fillRect(4,-85,5,3);ctx.strokeStyle='#777';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-15,-55);ctx.lineTo(-40,-22);ctx.moveTo(15,-55);ctx.lineTo(40,-22);ctx.stroke();if(boss.attack>0){ctx.strokeStyle='#aaa';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(15,-52);ctx.lineTo(45,-30);ctx.lineTo(54,-5);ctx.stroke();ctx.fillStyle='#777';ctx.fillRect(50,-10,10,55)}}else{ctx.fillStyle=p.hurt?'#aa6a60':'#5a6260';ctx.beginPath();ctx.ellipse(0,-2,10,16,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#303638';ctx.fillRect(-11,-48,22,38);ctx.fillStyle='#777';ctx.beginPath();ctx.arc(0,-56,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1c1f20';ctx.fillRect(-7,-58,14,5);ctx.strokeStyle='#1a1b1b';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-9,-40);ctx.lineTo(-18,-18);ctx.moveTo(9,-40);ctx.lineTo(18,-18);ctx.stroke();ctx.strokeStyle='#aaa9a1';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(12,-38);ctx.lineTo(25,-10);ctx.stroke();ctx.fillStyle='#777';ctx.fillRect(20,-14,5,28)}ctx.restore();}
+function render(){ground();let objects=[{kind:'boss',q:boss},{kind:'p',q:p}].sort((a,b)=>b.q.z-a.q.z);objects.forEach(o=>drawCharacter(o.q,o.kind==='boss'));for(let q of particles){let pr=project(q.x,q.y,q.z,cam.x,cam.y,cam.z,p.angle*.12);ctx.globalAlpha=Math.max(0,q.life/q.max);ctx.fillStyle=q.color;ctx.fillRect(pr.x-2,pr.y-2,4,4)}ctx.globalAlpha=1;
+ messages.forEach(m=>{ctx.fillStyle='rgba(180,170,150,.9)';ctx.font='bold 42px Georgia';ctx.textAlign='center';ctx.fillText(m.text,W/2,m.y);ctx.font='12px Georgia';ctx.fillStyle='rgba(180,170,150,.35)'})
+ if(victory){ctx.fillStyle='rgba(180,170,150,.7)';ctx.font='12px Georgia';ctx.textAlign='center';ctx.fillText('A worthy soul is released',W/2,H*.48)}
+ if(dead){ctx.fillStyle='rgba(180,170,150,.7)';ctx.font='12px Georgia';ctx.textAlign='center';ctx.fillText('PRESS ENTER TO RISE AGAIN',W/2,H*.48)}
+}
+let last=performance.now();function loop(t){let dt=(t-last)/1000;last=t;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+document.getElementById('enter').onclick=()=>{if(dead||victory){p.hp=100;p.x=0;p.z=5;boss.hp=boss.max;boss.x=0;boss.z=-9;boss.attack=0;boss.phase=0;dead=false;victory=false}started=true;document.getElementById('title').style.opacity=0;setTimeout(()=>document.getElementById('title').style.display='none',600)};
+// touch
+const touchMove={active:false,x:0,y:0},stick=document.getElementById('stick');if(matchMedia('(pointer:coarse)').matches)document.body.classList.add('touchyes');
+stick.addEventListener('pointerdown',e=>{touchMove.active=true;stick.setPointerCapture(e.pointerId);touchMoveAt(e);});
+stick.addEventListener('pointermove',touchMoveAt);
+stick.addEventListener('pointerup',()=>{touchMove.active=false;touchMove.x=0;touchMove.y=0;});
+stick.addEventListener('pointercancel',()=>{touchMove.active=false;});
+function touchMoveAt(e){let r=stick.getBoundingClientRect();touchMove.x=Math.max(-1,Math.min(1,(e.clientX-(r.left+r.width/2))/48));touchMove.y=Math.max(-1,Math.min(1,(e.clientY-(r.top+r.height/2))/48));}
+
+document.getElementById('attack').addEventListener('pointerdown',e=>{e.preventDefault();attack()});document.getElementById('roll').addEventListener('pointerdown',e=>{e.preventDefault();roll()});
+})();
+</script>
+</body>
+</html>
