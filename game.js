@@ -26,10 +26,16 @@ $('#soundBtn').onclick=e=>{e.currentTarget.textContent=e.currentTarget.textConte
 function showMenu(){running=false;paused=false;cancelAnimationFrame(raf);clearInterval(spawnTimer);$('#game').classList.remove('active');$('#menu').classList.add('active');$('#pauseOverlay').classList.remove('active')}
 function startGame(){
   $('#menu').classList.remove('active');$('#game').classList.add('active');score=0;combo=1;lives=3;notes=[];running=true;paused=false;lastTime=performance.now();updateHud();
-  $$('#lanes .lane').forEach(l=>l.innerHTML='');spawnTimer=setInterval(spawnNote,difficulty==='easy'?850:520);
+  $('#resultOverlay').classList.remove('active');
+  $('#game').classList.toggle('duo-mode',mode==='duo');
+  const character=$('#gameCharacter'),chosen=palettes[selectedChar%palettes.length];
+  character.querySelector('.hair').style.background=chosen;
+  character.querySelector('.body').style.background=palettes[(selectedChar+2)%palettes.length];
+  $$('#lanes .lane').forEach(l=>l.innerHTML='');spawnTimer=setInterval(spawnNote,difficulty==='easy'?850:mode==='duo'?620:520);
   raf=requestAnimationFrame(loop);
 }
 $('#playBtn').onclick=startGame;$('#backBtn').onclick=showMenu;$('#exitBtn').onclick=showMenu;
+$('#restartBtn').onclick=startGame;$('#resultExitBtn').onclick=showMenu;
 $('#pauseBtn').onclick=()=>{paused=!paused;$('#pauseOverlay').classList.toggle('active',paused)};$('#resumeBtn').onclick=()=>{$('#pauseOverlay').classList.remove('active');paused=false;lastTime=performance.now()};
 
 function spawnNote(){
@@ -45,7 +51,12 @@ function loop(time){
 }
 function updateHud(){ $('#score').textContent=String(score).padStart(6,'0');$('#combo').textContent='×'+combo;$('#lives').textContent=[...Array(lives)].map(()=> '♥').join(' ')||'—'}
 function judgement(text,good=true){const j=$('#judgement');j.textContent=text;j.classList.remove('show');void j.offsetWidth;j.classList.add('show');if(good)j.style.color='var(--yellow)';else j.style.color='var(--pink)'}
-function miss(){lives--;combo=1;judgement('ERROU!',false);updateHud();if(lives<=0){running=false;clearInterval(spawnTimer);setTimeout(()=>{alert('Fim de jogo! Pontos: '+score);showMenu()},350)}}
+function miss(){lives--;combo=1;judgement('ERROU!',false);updateHud();if(lives<=0){running=false;clearInterval(spawnTimer);setTimeout(endGame,350)}}
+function endGame(){
+  $('#resultScore').textContent=String(score).padStart(6,'0');
+  $('#resultTitle').textContent=score>=2000?'CANTO DA FAVELA!':score>=800?'RITMO NO TALENTO!':'VOLTA AO BAILE!';
+  $('#resultOverlay').classList.add('active');
+}
 function hit(lane){
   const target=window.innerHeight*.88*.93;let best=null,bestDist=999;
   notes.forEach(n=>{if(+n.dataset.lane===lane){const d=Math.abs(parseFloat(n.dataset.y)-target);if(d<bestDist){best=n;bestDist=d}}});
